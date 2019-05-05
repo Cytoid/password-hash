@@ -16,15 +16,12 @@ RegisterHasher(PBKDF2, 0x02)
 describe('Password Hashing and Checks', () => {
   const pw = new PasswordHasher(PBKDF2)
   it('Hashes a password and passes it', async () => {
-    expect.assertions(3)
+    expect.assertions(2)
     const password = await genRandomString()
     const buffer = await pw.hash(password)
 
     // The password was generated
     expect(buffer).toBeTruthy()
-
-    // The password has the expected length
-    expect(buffer.length).toBe(pw.passwordLength + pw.saltLength + pw.defaultHasher.optionLength + 5)
 
     // The generated password passes the checks
     expect(await pw.check(password, buffer)).toBeTruthy()
