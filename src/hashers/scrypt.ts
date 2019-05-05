@@ -26,15 +26,15 @@ class ScryptHasher implements Hasher {
 		}
 	}
 
-	async hash(password: string, salt: Buffer): Promise<Buffer> {
+	hash(password: string, salt: Buffer): Promise<Buffer> {
 		return scrypt(password, salt, this.hashLength, {
 			N: Math.pow(2, this.cost),
 			r: this.blockSize,
 			p: this.parallelization,
 		})
 	}
-  getOptionBuffer(): Buffer {
-		const buff = Buffer.alloc(3)
+    getOptionBuffer(): Buffer {
+		const buff = Buffer.alloc(ScryptHasher.optionLength)
 		buff.writeUInt8(this.cost, 0)
 		buff.writeUInt8(this.blockSize, 1)
 		buff.writeUInt8(this.parallelization, 2)

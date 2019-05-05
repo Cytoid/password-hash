@@ -74,7 +74,7 @@ export default class PasswordHasher {
     const saltedPassword = await this.hasher.hash(password, salt)
     const buff = Buffer.alloc(5)
 
-    assert.ok(this.defaultHasher.id, "The default hasher was never registered.")
+    assert.ok(Number.isInteger(this.defaultHasher.id), "The default hasher was never registered.")
     buff.writeUInt8(this.defaultHasher.id, 0)
     buff.writeUInt16LE(this.passwordLength, 1)
     buff.writeUInt16LE(this.saltLength, 3)
@@ -117,5 +117,3 @@ export default class PasswordHasher {
     return PasswordValidity.Valid
   }
 }
-
-export * from './hashers'

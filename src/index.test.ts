@@ -1,6 +1,7 @@
 import { randomBytes as randomCallback } from 'crypto'
 import { promisify } from 'util'
-import PasswordHasher, { RegisterHasher, Scrypt } from '.'
+import PasswordHasher, { RegisterHasher } from '.'
+import { Scrypt, PBKDF2 } from './hashers'
 
 const randomBytes = promisify(randomCallback)
 function genRandomString() {
@@ -8,10 +9,12 @@ function genRandomString() {
     .then((buffer) => buffer.toString('base64'))
 }
 
-RegisterHasher(Scrypt, 0x01)
+RegisterHasher(Scrypt, 0x00)
+RegisterHasher(PBKDF2, 0x02)
+
 
 describe('Password Hashing and Checks', () => {
-  const pw = new PasswordHasher(Scrypt)
+  const pw = new PasswordHasher(PBKDF2)
   it('Hashes a password and passes it', async () => {
     expect.assertions(3)
     const password = await genRandomString()
