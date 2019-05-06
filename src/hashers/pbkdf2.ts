@@ -1,6 +1,6 @@
-import { Hasher } from '../'
-import { pbkdf2 as pbkdf2Callback, BinaryLike, getHashes } from 'crypto'
+import { BinaryLike, getHashes, pbkdf2 as pbkdf2Callback } from 'crypto'
 import { promisify } from 'util'
+import { Hasher } from '../'
 
 const pbkdf2: (
 	password: BinaryLike,
@@ -19,17 +19,17 @@ export enum PBKDF2Digest {
 const digestNames = [
 	'sha1',
 	'sha256',
-	'sha512'
+	'sha512',
 ]
 
 export default class PBKDF2Hasher implements Hasher {
-	static optionLength: number = 2
+	public static optionLength: number = 2
 
-	hashLength: number
-	cost: number = 15
-	digest = PBKDF2Digest.SHA512
+	public hashLength: number
+	public cost: number = 15
+	public digest = PBKDF2Digest.SHA512
 
-	constructor (hashLength: number, options?: Buffer) {
+	constructor(hashLength: number, options?: Buffer) {
 		this.hashLength = hashLength
 		if (options) {
 			this.cost = options.readUInt8(0)
@@ -37,16 +37,16 @@ export default class PBKDF2Hasher implements Hasher {
 		}
 	}
 
-	hash(password: string, salt: Buffer): Promise<Buffer> {
+	public hash(password: string, salt: Buffer): Promise<Buffer> {
 		return pbkdf2(
 			password,
 			salt,
 			Math.pow(2, this.cost),
 			this.hashLength,
-			digestNames[this.digest]
+			digestNames[this.digest],
 			)
 	}
-    getOptionBuffer(): Buffer {
+    public getOptionBuffer(): Buffer {
 		const buff = Buffer.alloc(PBKDF2Hasher.optionLength)
 		buff.writeUInt8(this.cost, 0)
 		buff.writeUInt8(this.digest, 1)

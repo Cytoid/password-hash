@@ -1,23 +1,23 @@
-import { Hasher } from '../'
-import { scrypt as scryptCallback, ScryptOptions, BinaryLike } from 'crypto'
+import { BinaryLike, scrypt as scryptCallback, ScryptOptions } from 'crypto'
 import { promisify } from 'util'
+import { Hasher } from '../'
 
 const scrypt: (
 	password: BinaryLike,
 	salt: BinaryLike,
 	keylen: number,
-	options: ScryptOptions
+	options: ScryptOptions,
 ) => Promise<Buffer> = promisify(scryptCallback)
 
 export default class ScryptHasher implements Hasher {
-	static optionLength: number = 3
+	public static optionLength: number = 3
 
-	hashLength: number
-	cost: number = 14
-	blockSize: number = 8
-	parallelization: number = 1
+	public hashLength: number
+	public cost: number = 14
+	public blockSize: number = 8
+	public parallelization: number = 1
 
-	constructor (hashLength: number, options?: Buffer) {
+	constructor(hashLength: number, options?: Buffer) {
 		this.hashLength = hashLength
 		if (options) {
 			this.cost = options.readUInt8(0)
@@ -26,14 +26,14 @@ export default class ScryptHasher implements Hasher {
 		}
 	}
 
-	hash(password: string, salt: Buffer): Promise<Buffer> {
+	public hash(password: string, salt: Buffer): Promise<Buffer> {
 		return scrypt(password, salt, this.hashLength, {
 			N: Math.pow(2, this.cost),
 			r: this.blockSize,
 			p: this.parallelization,
 		})
 	}
-    getOptionBuffer(): Buffer {
+    public getOptionBuffer(): Buffer {
 		const buff = Buffer.alloc(ScryptHasher.optionLength)
 		buff.writeUInt8(this.cost, 0)
 		buff.writeUInt8(this.blockSize, 1)
