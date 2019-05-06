@@ -1,7 +1,6 @@
 import { Buffer } from 'buffer'
 import { randomBytes as randomCallback} from 'crypto'
 import { promisify } from 'util'
-import * as assert from 'assert'
 const randomBytes = promisify(randomCallback)
 
 export interface HasherConstructor {
@@ -16,8 +15,9 @@ export interface Hasher {
 }
 
 export interface ManagedHasherConstructor {
-  new (): ManagedHasher
+  new (options?: Buffer): ManagedHasher
   id?: number
+  optionLength: number
 }
 export interface ManagedHasher {
   hash(password: string): Promise<Buffer>
@@ -30,7 +30,7 @@ function isHasherManaged(hasher: Hasher | ManagedHasher): hasher is ManagedHashe
 }
 
 function isHasherConstructorManaged(cons: HasherConstructor | ManagedHasherConstructor): cons is ManagedHasherConstructor {
-  return (<HasherConstructor>cons).optionLength === undefined
+  return cons.prototype.check !== undefined
 }
 
 export enum PasswordValidity {
@@ -82,9 +82,15 @@ export default class PasswordHasher {
   passwordLength: number = 128
   saltLength: number = 32
 
-  constructor(hasher: HasherConstructor | ManagedHasherConstructor) {
-    this.defaultHasher = hasher
-    this.hasher = new hasher(this.passwordLength)
+  constructor(Hasher: HasherConstructor | ManagedHasherConstructor, hasher?: Hasher | ManagedHasher) {
+    this.defaultHasher = Hasher
+    if (hasher) {
+      this.hasher = hasher
+    } else if (isHasherConstructorManaged(Hasher)) {
+      this.hasher = new Hasher()
+    } else {
+      this.hasher = new Hasher(this.passwordLength)
+    }
   }
 
   async hash(password: string): Promise<Buffer> {
@@ -92,12 +98,12 @@ export default class PasswordHasher {
       const hash = await this.hasher.hash(password)
       return Buffer.concat([
         Uint8Array.of(this.defaultHasher.id),
+        this.hasher.getOptionBuffer(),
         hash
       ])
     }
 	  const salt = await randomBytes(this.saltLength)
     const saltedPassword = await this.hasher.hash(password, salt)
-    assert.ok(Number.isInteger(this.defaultHasher.id), "The default hasher was never registered.")
     const buff = Buffer.alloc(5)
     buff.writeUInt8(this.defaultHasher.id, 0)
     buff.writeUInt16LE(this.passwordLength, 1)
@@ -112,11 +118,15 @@ export default class PasswordHasher {
 
   async check(password: string, hash: Buffer): Promise<PasswordValidity> {
     const hasherId = hash.readUInt8(0)
+    if (!RegisteredHashers.has(hasherId)) {
+      throw new Error(`The Hasher ID ${hasherId} was never registered`)
+    }
     const TheHasher = RegisteredHashers.get(hasherId)
 
     if (isHasherConstructorManaged(TheHasher)) {
-      const hasher = new TheHasher()
-      if (hasher.check(password, hash.slice(1))) {
+      const options = hash.slice(1, 1 + TheHasher.optionLength)
+      const hasher = new TheHasher(options)
+      if (await hasher.check(password, hash.slice(1 + TheHasher.optionLength))) {
         if (hasherId == this.defaultHasher.id) {
           return PasswordValidity.Valid
         } else {
