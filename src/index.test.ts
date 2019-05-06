@@ -36,6 +36,15 @@ describe("Scrypt", () => {
     // The generated password passes the checks
     expect(await pw.check(password2, hash)).toEqual(PasswordValidity.Invalid)
   })
+  it('Tolerates Changes in hashing parameters', async () => {
+    const oldHasher = new Hashers.Scrypt(pw.passwordLength)
+    oldHasher.cost = 10
+    const oldpw = new PasswordHasher(Hashers.Scrypt, oldHasher)
+    const password = await genRandomString()
+    const hash = await oldpw.hash(password)
+    expect(await oldpw.check(password, hash)).toEqual(PasswordValidity.Valid)
+    expect(await pw.check(password, hash)).toEqual(PasswordValidity.ValidOutdated)
+  })
 })
 
 describe("Bcrypt", () => {
@@ -57,6 +66,15 @@ describe("Bcrypt", () => {
 
     // The generated password passes the checks
     expect(await pw.check(password2, hash)).toEqual(PasswordValidity.Invalid)
+  })
+  it('Tolerates Changes in hashing parameters', async () => {
+    const oldHasher = new Hashers.Bcrypt()
+    oldHasher.cost = 8
+    const oldpw = new PasswordHasher(Hashers.Bcrypt, oldHasher)
+    const password = await genRandomString()
+    const hash = await oldpw.hash(password)
+    expect(await oldpw.check(password, hash)).toEqual(PasswordValidity.Valid)
+    expect(await pw.check(password, hash)).toEqual(PasswordValidity.ValidOutdated)
   })
 })
 
@@ -80,6 +98,15 @@ describe("PBKDF2", () => {
     // The generated password passes the checks
     expect(await pw.check(password2, hash)).toEqual(PasswordValidity.Invalid)
   })
+  it('Tolerates Changes in hashing parameters', async () => {
+    const oldHasher = new Hashers.PBKDF2(pw.passwordLength)
+    oldHasher.cost -= 3
+    const oldpw = new PasswordHasher(Hashers.PBKDF2, oldHasher)
+    const password = await genRandomString()
+    const hash = await oldpw.hash(password)
+    expect(await oldpw.check(password, hash)).toEqual(PasswordValidity.Valid)
+    expect(await pw.check(password, hash)).toEqual(PasswordValidity.ValidOutdated)
+  })
 })
 
 describe('Backward Compatibility', () => {
@@ -99,6 +126,5 @@ describe('Backward Compatibility', () => {
     await check('neoneoneo', '$2y$10$uMjwObGaWxNhJbv2k/1fVOsG.8vQPp45aw09TfvdUQAaf.8.64pmW')
     await check('neoneoneo', '$2y$10$VHTk99gZ0w0DKLn1mM2HEej6/dqN3b7fk5FguFSUj9cE/DvEnZJh6')
     await check('neoneoneo', '$2y$10$Lu3E5uiXyc0/ZMz0Zm.12OMpqzbpxDWfgsAk.WBdr8ksW2vsc5IlO')
-
   })
 })

@@ -127,7 +127,8 @@ export default class PasswordHasher {
       const options = hash.slice(1, 1 + TheHasher.optionLength)
       const hasher = new TheHasher(options)
       if (await hasher.check(password, hash.slice(1 + TheHasher.optionLength))) {
-        if (hasherId == this.defaultHasher.id) {
+        if (hasherId == this.defaultHasher.id &&
+            this.hasher.getOptionBuffer().equals(options)) {
           return PasswordValidity.Valid
         } else {
           return PasswordValidity.ValidOutdated
@@ -158,7 +159,7 @@ export default class PasswordHasher {
     if (hasherId != this.defaultHasher.id ||
         passwordLength != this.passwordLength ||
         saltLength != this.saltLength ||
-        !hasher.getOptionBuffer().equals(options)) {
+        !this.hasher.getOptionBuffer().equals(options)) {
       return PasswordValidity.ValidOutdated
     }
     return PasswordValidity.Valid

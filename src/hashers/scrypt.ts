@@ -1,4 +1,4 @@
-import { HasherConstructor, Hasher } from '../'
+import { Hasher } from '../'
 import { scrypt as scryptCallback, ScryptOptions, BinaryLike } from 'crypto'
 import { promisify } from 'util'
 
@@ -9,7 +9,7 @@ const scrypt: (
 	options: ScryptOptions
 ) => Promise<Buffer> = promisify(scryptCallback)
 
-class ScryptHasher implements Hasher {
+export default class ScryptHasher implements Hasher {
 	static optionLength: number = 3
 
 	hashLength: number
@@ -41,6 +41,3 @@ class ScryptHasher implements Hasher {
 		return buff
 	}
 }
-
-const TheHasher: HasherConstructor = ScryptHasher
-export default TheHasher

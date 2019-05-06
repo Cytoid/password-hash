@@ -1,4 +1,4 @@
-import { HasherConstructor, Hasher } from '../'
+import { Hasher } from '../'
 import { pbkdf2 as pbkdf2Callback, BinaryLike, getHashes } from 'crypto'
 import { promisify } from 'util'
 
@@ -22,7 +22,7 @@ const digestNames = [
 	'sha512'
 ]
 
-class PBKDF2Hasher implements Hasher {
+export default class PBKDF2Hasher implements Hasher {
 	static optionLength: number = 2
 
 	hashLength: number
@@ -53,6 +53,3 @@ class PBKDF2Hasher implements Hasher {
 		return buff
 	}
 }
-
-const TheHasher: HasherConstructor = PBKDF2Hasher
-export default TheHasher
